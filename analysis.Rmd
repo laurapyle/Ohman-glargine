@@ -1,7 +1,7 @@
 ---
 title: "Early Glargine in DKA"
 author: "Laura Pyle"
-date: "September 25, 2018"
+date: "`r format(Sys.time(), '%d %B %Y')`"
 output: word_document
 ---
 
@@ -70,10 +70,6 @@ time_vars <- c("StudyID","StudyID.glucose","Last.Insulin.Administration_mod_Date
 # get rid of missing insulin dates and times
 hosp_er <- completeFun(hosp_er,"Last.Insulin.Administration_mod_Date")
 
-# NOTE: See 1281_3...I think I have done the next step incorrectly.  This person was admitted at 9:40 and 13:36 on the same day, and has
-# insulin discontinuations of 12:30 and 13:30.  I used the last record which would mean that insulin was discontinued 6 minutes prior to admission.
-# need to check with Becky.  If this is OK, then give her the #s per group
-
 # in the hosp_er dataset, study IDs are unique to an admission (e.g., 1151_1 and 1151_2)
 # but there can be multiple records for the same admission, if the person moved from ER to inpatient
 # keep the one with the latest date and time of IV insulin administration
@@ -103,7 +99,7 @@ View(merged[merged$min_admit_insdc<0,check])
 # Glargine time is not always the same day as admission
 merged$glarginetime <- as_datetime(hms(merged$Glargine_Time))
 merged$temp <- difftime(merged$glarginetime,merged$admittime,units="mins")
-merged$min_admit_glargine <- (as.duration(temp) +   ddays(merged$Glargine_mod_Date-merged$Admit_mod_Date))/dminutes(1)
+merged$min_admit_glargine <- (as.duration(merged$temp) +   ddays(merged$Glargine_mod_Date-merged$Admit_mod_Date))/dminutes(1)
 merged$min_insdc_glargine <- merged$min_admit_glargine - merged$min_admit_insdc
 merged$temp1 <- merged$min_admit_insdc-240
 merged$temp2 <- merged$min_admit_insdc-120
@@ -134,7 +130,7 @@ merged <- merged[order(merged$StudyID.glucose,desc(merged$rebound_hyper)),]
 rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% filter(row_number(StudyID.glucose) == 1)
 rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% top_n(1,StudyID.glucose)
 rebound_hyper[rebound_hyper$rebound_hyper==0,
-             c("StudyID.glucose","min_admit_insdc","Glucose.from.Admit..Minutes.","min_insdc_gluc","Glucose","rebound_hyper","October.1.2014.Flag")]
+             c("StudyID.glucose","min_admit_insdc","Glucose.from.Admit..Minutes.","min_insdc_gluc","Glucose","rebound_hyper","group")]
 
 # combine Military and Private insurance
 rebound_hyper$Insnew <-as.character(rebound_hyper$Insurance.Type)
@@ -145,7 +141,6 @@ rebound_hyper$Insnew <-as.factor(rebound_hyper$Insnew)
 # merge back in median glucose values
 rebound_hyper <- merge(rebound_hyper,gluc_median,by.x="StudyID.glucose",by.y="StudyID.glucose")
 
-N <- nrow(distinct(rebound_hyper,StudyID.glucose))
 
 ####################################################################################################
 
@@ -155,8 +150,9 @@ N <- nrow(distinct(rebound_hyper,StudyID.glucose))
 
 # Set factors and levels
 rebound_hyper$rebound_hyper <- as.factor(rebound_hyper$rebound_hyper)
+rebound_hyper$group <- as.factor(rebound_hyper$group)
 levels(rebound_hyper$rebound_hyper)=c('No','Yes')
-levels(rebound_hyper$October.1.2014.Flag)=c('After','Before')
+#levels(rebound_hyper$October.1.2014.Flag)=c('After','Before')
 levels(rebound_hyper$Sex)=c('Female','Male')
 levels(rebound_hyper$Ethnicity)=c('American Indian or Alaska Native','Asian','Black or African American','Hispanic','Multiracial'
                                   ,'Native Hawaiian or Other Pacific Islander','Other','White')
@@ -167,7 +163,7 @@ rebound_hyper$HbA1c.Closest.to.Admisson <- as.numeric(rebound_hyper$HbA1c.Closes
 
 # Set Labels
 label(rebound_hyper$rebound_hyper)='Rebound hyperglycemia'
-label(rebound_hyper$October.1.2014.Flag)='Study Period'
+label(rebound_hyper$group)
 label(rebound_hyper$Sex)='Sex'
 label(rebound_hyper$Ethnicity)='Ethnicity'
 label(rebound_hyper$Insnew)='Insurance'
@@ -178,8 +174,13 @@ label(rebound_hyper$HbA1c.Closest.to.Admisson)='HbA1c closest to admission'
 label(rebound_hyper$Median.Income)='Median income'
 label(rebound_hyper$median_glucose)='Median glucose'
 
-tab1 <- final_table(rebound_hyper,c('Sex','Ethnicity',"Insnew","Age","Height","Weight","HbA1c.Closest.to.Admisson","Median.Income"),
-                    group=rebound_hyper$October.1.2014.Flag,margin=2,single=0,ron=2)
+# keep unique admissions
+rebound_hyper_distinct <- distinct(rebound_hyper,StudyID,.keep_all = TRUE)
+N <- sum(!is.na(rebound_hyper_distinct$group))
+Nexcl <- sum(is.na(rebound_hyper_distinct$group))
+
+tab1 <- final_table(rebound_hyper_distinct,c('Sex','Ethnicity',"Insnew","Age","Height","Weight","HbA1c.Closest.to.Admisson","Median.Income"),
+                    group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
 
 ####################################################################################################
 
@@ -190,21 +191,23 @@ tab1 <- final_table(rebound_hyper,c('Sex','Ethnicity',"Insnew","Age","Height","W
 # early vs. late glargine variable is October.1.2014.Flag
 #tbl <- table(rebound_hyper$rebound_hyper,rebound_hyper$October.1.2014.Flag)
 #rslt <- chisq.test(tbl)
-tab_primary <- final_table(rebound_hyper,'rebound_hyper',group=rebound_hyper$October.1.2014.Flag,margin=2,single=0,ron=2)
+tab_primary <- final_table(rebound_hyper_distinct,'rebound_hyper',group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
 
 ####################################################################################################
 #Median glucose #
 ####################################################################################################
-tab_medgluc <- final_table(rebound_hyper,'median_glucose',group=rebound_hyper$October.1.2014.Flag,margin=2,single=0,ron=2)
+tab_medgluc <- final_table(rebound_hyper_distinct,'median_glucose',group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
 
 ```
 
 # Background
 
-The purpose of this study was to determine if early glargine administration in children with DKA prevents rebound hyperglycemia and recurrent ketogenesis without increasing the rate of hypoglycemia.  Participants who received glargine at onset of DKA management (i.e., those admitted after October 1, 2014) will be compared to those who received glargine at the time of discontinuation of IV insulin (those admitted prior to October 1, 2014).  
+The purpose of this study was to determine if early glargine administration in children with DKA prevents rebound hyperglycemia and recurrent ketogenesis without increasing the rate of hypoglycemia.   
 
 # Methods
 
+Early glargine administration was defined as either (1) glargine administered before the start of IV insulin administration or (2) glargine administered after the start of IV insulin administration with >4 hours of overlap with IV insulin.  Late glargine administration was defined as glargine administered with <2 hour overlap with IV insulin.  There were `r Nexcl` participants with between 2-4 hours of overlap with IV insulin who were excluded from this analysis.
+ 
 The primary outcome of this study is rebound hyperglycemia, defined as serum glucose >180 mg/dL within 12 hours of discontinuation of IV insulin.  
 
 The following data cleaning and manipulation steps were performed in order to determine whether each participant met the definition of rebound hyperglycemia:
@@ -231,7 +234,7 @@ kable(tab1,caption="Table 1.  Descriptive statistics.  Asterisks indicate that F
 ```
 \
 
-There was no difference in the rate of rebound hyperglycemia in the two groups (Table 2).
+There was a significant difference in the rate of rebound hyperglycemia in the two groups (Table 2).
 
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
 kable(tab_primary,caption="Table 2.  Comparison of rates of rebound hyperglycemia.")
