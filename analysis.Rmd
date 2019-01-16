@@ -63,7 +63,8 @@ gluc$Glucose <- as.numeric(as.character(gluc$Glucose))
 # keep insulin end time, not glargine
 myvars <- c("StudyID","StudyID.glucose","MRFin","Age","Sex","Ethnicity","Height","Weight","HbA1c.Closest.to.Admisson","HbA1c.Most.recent.prior.to.Admission","Insurance.Type",
             "Median.Income","October.1.2014.Flag","Admit_mod_Date","Admit_Time","Discharge_mod_Date","Discharge_Time",
-            "Last.Insulin.Administration_mod_Date","Last.Insulin.Administration_Time","Glargine_Time","Glargine_mod_Date")
+            "Last.Insulin.Administration_mod_Date","Last.Insulin.Administration_Time","Glargine_Time","Glargine_mod_Date",
+            "First Insulin Start_Time","First Insulin Start_mod_Date")
 hosp_er <- all[myvars]
 time_vars <- c("StudyID","StudyID.glucose","Last.Insulin.Administration_mod_Date","Last.Insulin.Administration_Time")
 
@@ -123,14 +124,24 @@ setnames(gluc_median,"x","median_glucose")
 merged$rebound_hyper <- ifelse((!is.na(merged$min_insdc_gluc)) & (merged$min_insdc_gluc<720) & (merged$Glucose>180),1,0)
 merged$test <- ifelse(merged$min_insdc_gluc<720,1,0)
 
+# create a new variable for hypoglycemia (<70) within 12 hours of insulin discontinuation
+merged$hypo_12hr <- ifelse((!is.na(merged$min_insdc_gluc)) & (merged$min_insdc_gluc<720) & (merged$Glucose<70),1,0)
+
+# create a new variable for hypoglycemia (<70) during IV insulin administration
+#merged$hypo_IVins <- 
+
 # need to keep highest value of rebound_hyper
 merged <- merged[order(merged$StudyID.glucose,desc(merged$rebound_hyper)),]
-
 # below doesn't work any more???  Should work, now that I am just subtracting dates
 rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% filter(row_number(StudyID.glucose) == 1)
-rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% top_n(1,StudyID.glucose)
+#rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% top_n(1,StudyID.glucose)
 rebound_hyper[rebound_hyper$rebound_hyper==0,
              c("StudyID.glucose","min_admit_insdc","Glucose.from.Admit..Minutes.","min_insdc_gluc","Glucose","rebound_hyper","group")]
+
+# create new dataframe to keep highest value of hypoglycemia within 12 hours
+hypo12 <- merged[order(merged$StudyID.glucose,desc(merged$hypo_12hr)),]
+hypo12 <- hypo12 %>% group_by(StudyID.glucose) %>% filter(row_number(StudyID.glucose) == 1)
+hypo12 <- merged %>% group_by(StudyID.glucose) %>% top_n(1,StudyID.glucose)
 
 # combine Military and Private insurance
 rebound_hyper$Insnew <-as.character(rebound_hyper$Insurance.Type)
@@ -197,6 +208,11 @@ tab_primary <- final_table(rebound_hyper_distinct,'rebound_hyper',group=rebound_
 #Median glucose #
 ####################################################################################################
 tab_medgluc <- final_table(rebound_hyper_distinct,'median_glucose',group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
+
+####################################################################################################
+#Hypoglycemia within 12 hours after insulin discontinuation #
+####################################################################################################
+tab_hypo12 <- final_table(rebound_hyper_distinct,'rebound_hyper',group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
 
 ```
 
