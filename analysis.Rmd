@@ -64,7 +64,7 @@ gluc$Glucose <- as.numeric(as.character(gluc$Glucose))
 myvars <- c("StudyID","StudyID.glucose","MRFin","Age","Sex","Ethnicity","Height","Weight","HbA1c.Closest.to.Admisson","HbA1c.Most.recent.prior.to.Admission","Insurance.Type",
             "Median.Income","October.1.2014.Flag","Admit_mod_Date","Admit_Time","Discharge_mod_Date","Discharge_Time",
             "Last.Insulin.Administration_mod_Date","Last.Insulin.Administration_Time","Glargine_Time","Glargine_mod_Date",
-            "First Insulin Start_Time","First Insulin Start_mod_Date")
+            "First.Insulin.Start_Time","First.Insulin.Start_mod_Date")
 hosp_er <- all[myvars]
 time_vars <- c("StudyID","StudyID.glucose","Last.Insulin.Administration_mod_Date","Last.Insulin.Administration_Time")
 
@@ -89,10 +89,6 @@ merged$elapsed <- difftime(merged$instime,merged$admittime,units="mins")
 merged$min_admit_insdc <- (as.duration(merged$elapsed) + ddays(merged$Last.Insulin.Administration_mod_Date-merged$Admit_mod_Date))/dminutes(1)
 merged$min_insdc_gluc <- ifelse(merged$Glucose.from.Admit..Minutes.>merged$min_admit_insdc,merged$Glucose.from.Admit..Minutes.-merged$min_admit_insdc,NA)
 check <- c("StudyID","Admit_Time","admittime","Last.Insulin.Administration_Time","instime","elapsed","Last.Insulin.Administration_mod_Date","Admit_mod_Date","min_admit_insdc")
-View(merged[check])
-View(merged[merged$min_admit_insdc<0,check])
-# I think the above code is working, but there are some people with insulin d/c before admission, and some people with insulin d/c 3+ days after admission
-# need to check with Becky
 
 # create new group variable for overlap between IV insulin and glargine
 # if glargine is before IV insulin start, then they are in the early group
@@ -107,7 +103,6 @@ merged$temp2 <- merged$min_admit_insdc-120
 merged$group[merged$min_admit_glargine<(merged$min_admit_insdc-240)] <- "Early"
 merged$group[merged$min_admit_glargine>(merged$min_admit_insdc-120)] <- "Late"
 check <- c("StudyID","Admit_mod_Date","admittime","Last.Insulin.Administration_mod_Date","instime","min_admit_insdc","Glargine_mod_Date","glarginetime","min_admit_glargine","min_insdc_glargine","temp1","temp2","group")
-View(merged[check])
 count <- distinct(merged,StudyID.glucose, .keep_all=TRUE)
 table(count$group,useNA="always")
 table(count$group,count$October.1.2014.Flag)
@@ -131,17 +126,17 @@ merged$hypo_12hr <- ifelse((!is.na(merged$min_insdc_gluc)) & (merged$min_insdc_g
 #merged$hypo_IVins <- 
 
 # need to keep highest value of rebound_hyper
-merged <- merged[order(merged$StudyID.glucose,desc(merged$rebound_hyper)),]
-# below doesn't work any more???  Should work, now that I am just subtracting dates
-rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% filter(row_number(StudyID.glucose) == 1)
+merged <- merged[order(merged$StudyID,desc(merged$rebound_hyper)),]
+# having both of the next 2 statements should not work/be necessary
+rebound_hyper <- merged %>% group_by(StudyID) %>% filter(row_number(StudyID) == 1)
+#rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% filter(row_number(StudyID.glucose) == 1)
 #rebound_hyper <- merged %>% group_by(StudyID.glucose) %>% top_n(1,StudyID.glucose)
 rebound_hyper[rebound_hyper$rebound_hyper==0,
              c("StudyID.glucose","min_admit_insdc","Glucose.from.Admit..Minutes.","min_insdc_gluc","Glucose","rebound_hyper","group")]
 
 # create new dataframe to keep highest value of hypoglycemia within 12 hours
-hypo12 <- merged[order(merged$StudyID.glucose,desc(merged$hypo_12hr)),]
-hypo12 <- hypo12 %>% group_by(StudyID.glucose) %>% filter(row_number(StudyID.glucose) == 1)
-hypo12 <- merged %>% group_by(StudyID.glucose) %>% top_n(1,StudyID.glucose)
+hypo12 <- merged[order(merged$StudyID,desc(merged$hypo_12hr)),]
+hypo12 <- hypo12 %>% group_by(StudyID) %>% filter(row_number(StudyID) == 1)
 
 # combine Military and Private insurance
 rebound_hyper$Insnew <-as.character(rebound_hyper$Insurance.Type)
@@ -185,13 +180,11 @@ label(rebound_hyper$HbA1c.Closest.to.Admisson)='HbA1c closest to admission'
 label(rebound_hyper$Median.Income)='Median income'
 label(rebound_hyper$median_glucose)='Median glucose'
 
-# keep unique admissions
-rebound_hyper_distinct <- distinct(rebound_hyper,StudyID,.keep_all = TRUE)
-N <- sum(!is.na(rebound_hyper_distinct$group))
-Nexcl <- sum(is.na(rebound_hyper_distinct$group))
+N <- sum(!is.na(rebound_hyper$group))
+Nexcl <- sum(is.na(rebound_hyper$group))
 
-tab1 <- final_table(rebound_hyper_distinct,c('Sex','Ethnicity',"Insnew","Age","Height","Weight","HbA1c.Closest.to.Admisson","Median.Income"),
-                    group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
+tab1 <- final_table(rebound_hyper,c('Sex','Ethnicity',"Insnew","Age","Height","Weight","HbA1c.Closest.to.Admisson","Median.Income"),
+                    group=rebound_hyper$group,margin=2,single=0,ron=2)
 
 ####################################################################################################
 
@@ -202,17 +195,17 @@ tab1 <- final_table(rebound_hyper_distinct,c('Sex','Ethnicity',"Insnew","Age","H
 # early vs. late glargine variable is October.1.2014.Flag
 #tbl <- table(rebound_hyper$rebound_hyper,rebound_hyper$October.1.2014.Flag)
 #rslt <- chisq.test(tbl)
-tab_primary <- final_table(rebound_hyper_distinct,'rebound_hyper',group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
+tab_primary <- final_table(rebound_hyper,'rebound_hyper',group=rebound_hyper$group,margin=2,single=0,ron=2)
 
 ####################################################################################################
 #Median glucose #
 ####################################################################################################
-tab_medgluc <- final_table(rebound_hyper_distinct,'median_glucose',group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
+tab_medgluc <- final_table(rebound_hyper,'median_glucose',group=rebound_hyper$group,margin=2,single=0,ron=2)
 
 ####################################################################################################
 #Hypoglycemia within 12 hours after insulin discontinuation #
 ####################################################################################################
-tab_hypo12 <- final_table(rebound_hyper_distinct,'rebound_hyper',group=rebound_hyper_distinct$group,margin=2,single=0,ron=2)
+tab_hypo12 <- final_table(rebound_hyper,'rebound_hyper',group=rebound_hyper$group,margin=2,single=0,ron=2)
 
 ```
 
