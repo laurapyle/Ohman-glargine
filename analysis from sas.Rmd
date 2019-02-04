@@ -1,0 +1,143 @@
+---
+title: "Early Glargine in DKA"
+author: "Laura Pyle"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyr)
+library(magrittr)
+library(dplyr)
+library(lubridate)
+library(zoo) 
+library(M3)
+library(data.table)
+library(Table1)
+library(devtools)
+library(Hmisc)
+library(knitr)
+
+# read in data
+final <- read.csv("H:\\Endocrinology\\Ohman\\Ohman early glargine\\Data\\final data from sas.csv")
+
+# use Claire's functions
+source(file='C:\\Users\\pylell\\Documents\\GitHub\\General-code\\temp_table1_nofishers.r')
+
+
+####################################################################################################
+
+####################################################################################################
+#Descriptive Tables #
+####################################################################################################
+
+# Set factors and levels
+final$rebound_hyper <- as.factor(final$rebound_hyper)
+final$group <- as.factor(final$group)
+levels(final$rebound_hyper)=c('No','Yes')
+levels(final$Sex)=c('Female','Male')
+levels(final$Ethnicity)=c('Black or African American','Hispanic','Multiracial','Other','White')
+levels(final$Insurance_Type)=c('Unknown','Private/Military','Public','Self Pay')
+final$hypo_12hr <- as.factor(final$hypo_12hr)
+final$hypo_iv <- as.factor(final$hypo_iv)
+final$ketosis_either <- as.factor(final$ketosis_either)
+levels(final$hypo_12hr)=c('No','Yes')
+levels(final$hypo_iv)=c('No','Yes')
+levels(final$ketosis_either)=c('No','Yes')
+
+# convert to numeric
+final$HbA1c_Closest_to_Admisson <- as.numeric(final$HbA1c_Closest_to_Admisson)
+
+# Set Labels
+label(final$rebound_hyper)='Rebound hyperglycemia'
+label(final$group)="Group"
+label(final$Sex)='Sex'
+label(final$Ethnicity)='Ethnicity'
+label(final$Insurance_Type)='Insurance'
+label(final$Age)='Age'
+label(final$Height)='Height'
+label(final$Weight)='Weight'
+label(final$HbA1c_Closest_to_Admisson)='HbA1c closest to admission'
+label(final$Median_Income)='Median income'
+label(final$median_glucose)='Median glucose'
+label(final$hypo_12hr)='Hypoglycemia within 12 hours after d/c IV insulin'
+label(final$hypo_iv)='Hypoglycemia during IV insulin'
+label(final$ketosis_either)='Ketosis by either BHB or urine ketones'
+
+Norig <- length(final$group)
+final <- final[final$group %in% c("Early","Late"),]
+final$group <- droplevels(final$group)
+N <- sum(!is.na(final$group))
+Nexcl <- Norig - N
+
+tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income"),
+                    group=final$group,margin=2,single=0,ron=2)
+
+
+####################################################################################################
+
+####################################################################################################
+#Primary Outcome #
+####################################################################################################
+
+# early vs. late glargine variable is October.1.2014.Flag
+#tbl <- table(rebound_hyper$rebound_hyper,rebound_hyper$October.1.2014.Flag)
+#rslt <- chisq.test(tbl)
+tab_primary <- final_table(final,c('rebound_hyper','median_glucose','hypo_12hr','hypo_iv','ketosis_either'),
+                           group=final$group,margin=2,single=0,ron=2)
+
+
+
+```
+
+# Background
+
+The purpose of this study was to determine if early glargine administration in children with DKA prevents rebound hyperglycemia and recurrent ketogenesis without increasing the rate of hypoglycemia.   
+
+# Methods
+
+Early glargine administration was defined as either (1) glargine administered before the start of IV insulin administration or (2) glargine administered after the start of IV insulin administration with >4 hours of overlap with IV insulin.  Late glargine administration was defined as glargine administered with <2 hour overlap with IV insulin.  There were `r Nexcl` participants with between 2-4 hours of overlap with IV insulin who were excluded from this analysis.
+ 
+The primary outcome of this study is rebound hyperglycemia, defined as serum glucose >180 mg/dL within 12 hours of discontinuation of IV insulin.  
+
+The following data cleaning and manipulation steps were performed in order to determine whether each participant met the definition of rebound hyperglycemia:
+
+1)  Study IDs on the main data sheet ending in "_1" or something similar, to indicate distinct encounters, were stripped of the suffix starting with the underscore, so they would match the IDs on the glucose data sheet.
+2)  Missing glucose values or those with comments such as ("Already Documented","See Comment","Task Duplication", and "TNP") deleted from the glucose results.
+3)  Encounters that were missing insulin administration dates and/or times were deleted.
+4)  For each encounter, the last date and time of IV insulin administration was determined.
+5)  The main data sheet was merged with glucose results by a combination of study ID and age, since a participant could have more than one encounter.
+6)  If a participant had a glucose value >180 mg/dL within 12 hours of IV insulin discontinuation, s/he was classified as having rebound hyperglycemia.
+
+Additional data cleaning and manipulation steps included:
+
+1)  Military and private insurance were combined into one category.
+2)  American Indian and Asian ethnicities were combined with Other ethnicity.
+
+Secondary outcomes were defined as follows:
+
+1) If a participant had a glucose value <70 within 12 hours of IV insulin discontinuation, s/he was classified as having hypoglycemia within 12 hours of insulin discontinuation.
+2) If a participant had a glucose value <70 during IV insulin administration, s/he was classified as having hypoglycemia during IV insulin.
+3) If a participant had a beta-hydroxybutyrate value >= 1.5 mmol/L or moderate or large urine ketones within 12 hours of IV insulin discontinuation, s/he was classifed as having ketosis within 12 hours of insulin discontinuation.
+
+Descriptive statistics reported include mean and standard deviations for continuous variables, and frequencies and percentages for categorical variables.  To compare characteristics in the two groups, t-tests were used for continuous variables and the chi-square test was used for categorical variables.
+
+# Results
+
+There were `r N` subjects included in this analysis.  Descriptive statistics are shown in Table 1.
+
+```{r, results='asis',tidy=TRUE, echo=FALSE}
+kable(tab1,caption="Table 1.  Descriptive statistics.")
+```
+\
+
+Table 2 shows the results of the comparisons of study outcomes.
+
+```{r, results='asis',tidy=TRUE, echo=FALSE}
+kable(tab_primary,caption="Table 2.  Comparison of study outcomes.")
+```
+
+
+
