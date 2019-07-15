@@ -36,6 +36,7 @@ source(file='C:\\Users\\pylell\\Documents\\GitHub\\General-code\\temp_table1_nof
 # Set factors and levels
 final$rebound_hyper <- as.factor(final$rebound_hyper)
 final$group <- as.factor(final$group)
+final$cerebral_edema <- as.factor(final$cerebral_edema)
 levels(final$rebound_hyper)=c('No','Yes')
 levels(final$Sex)=c('Female','Male')
 levels(final$Ethnicity)=c('Black or African American','Hispanic','Multiracial','Other','White')
@@ -46,6 +47,11 @@ final$ketosis_either <- as.factor(final$ketosis_either)
 levels(final$hypo_12hr)=c('No','Yes')
 levels(final$hypo_iv)=c('No','Yes')
 levels(final$ketosis_either)=c('No','Yes')
+levels(final$cerebral_edema)=c('No','Yes')
+final$hypokal_12hr <- as.factor(final$hypokal_12hr)
+levels(final$hypokal_12hr) =c('No','Yes')
+final$hypokal_iv <- as.factor(final$hypokal_iv)
+levels(final$hypokal_iv)=c('No','Yes')
 
 # convert to numeric
 final$HbA1c_Closest_to_Admisson <- as.numeric(final$HbA1c_Closest_to_Admisson)
@@ -65,6 +71,11 @@ label(final$median_glucose)='Median glucose'
 label(final$hypo_12hr)='Hypoglycemia within 12 hours after d/c IV insulin'
 label(final$hypo_iv)='Hypoglycemia during IV insulin'
 label(final$ketosis_either)='Ketosis by either BHB or urine ketones'
+label(final$cerebral_edema)='Cerebral Edema'
+label(final$hypokal_12hr)='Hypokalemia within 12 hours after d/c IV insulin'
+label(final$hypokal_iv)='Hypokalemia during IV insulin'
+label(final$dur_iv_insulin)='Length of IV insulin administration'
+label(final$slopegluc)='Rate of glucose decrease (mg/dL per minute)'
 
 Norig <- length(final$group)
 final <- final[final$group %in% c("Early","Late"),]
@@ -85,7 +96,8 @@ tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","Age","Height","W
 # early vs. late glargine variable is October.1.2014.Flag
 #tbl <- table(rebound_hyper$rebound_hyper,rebound_hyper$October.1.2014.Flag)
 #rslt <- chisq.test(tbl)
-tab_primary <- final_table(final,c('rebound_hyper','median_glucose','hypo_12hr','hypo_iv','ketosis_either'),
+tab_primary <- final_table(final,c('rebound_hyper','median_glucose','hypo_12hr','hypo_iv','ketosis_either','cerebral_edema',
+                                   'hypokal_12hr','hypokal_iv','dur_iv_insulin','slopegluc'),
                            group=final$group,margin=2,single=0,ron=2)
 
 
@@ -121,6 +133,7 @@ Secondary outcomes were defined as follows:
 1) If a participant had a glucose value <70 within 12 hours of IV insulin discontinuation, s/he was classified as having hypoglycemia within 12 hours of insulin discontinuation.
 2) If a participant had a glucose value <70 during IV insulin administration, s/he was classified as having hypoglycemia during IV insulin.
 3) If a participant had a beta-hydroxybutyrate value >= 1.5 mmol/L or moderate or large urine ketones within 12 hours of IV insulin discontinuation, s/he was classifed as having ketosis within 12 hours of insulin discontinuation.
+4) If a participant had a potassium level <3.5 mmol/L either during IV insulin administration or within 12 hours of IV insulin discontinuation, s/he was classified as having hypokalemia during that time period.
 
 Descriptive statistics reported include mean and standard deviations for continuous variables, and frequencies and percentages for categorical variables.  To compare characteristics in the two groups, t-tests were used for continuous variables and the chi-square test was used for categorical variables.
 
