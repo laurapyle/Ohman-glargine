@@ -142,14 +142,14 @@ Descriptive statistics reported include mean and standard deviations for continu
 There were `r N` subjects included in this analysis.  Descriptive statistics are shown in Table 1.
 
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
-kable(tab1,caption="Table 1.  Descriptive statistics.")
+kable(tab1,caption="Table 1.  Descriptive statistics.  Statistics given are N(%), mean±SD, or median (25th %ile, 75th %ile).  * denotes that the Mann-Whitney test was used, and ** denotes that Fisher's exact test was used.")
 ```
 \
 
 Table 2 shows the results of the comparisons of study outcomes.
 
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
-kable(tab_primary,caption="Table 2.  Comparison of study outcomes.")
+kable(tab_primary,caption="Table 2.  Comparison of study outcomes.  Statistics given are N(%), mean±SD, or median (25th %ile, 75th %ile).  * denotes that the Mann-Whitney test was used, and ** denotes that Fisher's exact test was used.")
 ```
 
 
