@@ -15,7 +15,7 @@ library(lubridate)
 library(zoo) 
 library(M3)
 library(data.table)
-library(Table1)
+#library(Table1)
 library(devtools)
 library(Hmisc)
 library(knitr)
@@ -35,17 +35,25 @@ source(file='C:\\Users\\pylell\\Documents\\GitHub\\General-code\\temp_table1_nof
 
 # Set factors and levels
 final$rebound_hyper <- as.factor(final$rebound_hyper)
+final$rebound_hyper_250 <- as.factor(final$rebound_hyper_250)
+final$rebound_hyper_300 <- as.factor(final$rebound_hyper_300)
 final$group <- as.factor(final$group)
 final$cerebral_edema <- as.factor(final$cerebral_edema)
 levels(final$rebound_hyper)=c('No','Yes')
+levels(final$rebound_hyper_250)=c('No','Yes')
+levels(final$rebound_hyper_300)=c('No','Yes')
 levels(final$Sex)=c('Female','Male')
 levels(final$Ethnicity)=c('Black or African American','Hispanic','Multiracial','Other','White')
 levels(final$Insurance_Type)=c('Unknown','Private/Military','Public','Self Pay')
 final$hypo_12hr <- as.factor(final$hypo_12hr)
+final$hypo_12hr54 <- as.factor(final$hypo_12hr54)
 final$hypo_iv <- as.factor(final$hypo_iv)
+final$hypo_iv54 <- as.factor(final$hypo_iv54)
 final$ketosis_either <- as.factor(final$ketosis_either)
 levels(final$hypo_12hr)=c('No','Yes')
+levels(final$hypo_12hr54)=c('No','Yes')
 levels(final$hypo_iv)=c('No','Yes')
+levels(final$hypo_iv54)=c('No','Yes')
 levels(final$ketosis_either)=c('No','Yes')
 levels(final$cerebral_edema)=c('No','Yes')
 final$hypokal_12hr <- as.factor(final$hypokal_12hr)
@@ -53,11 +61,17 @@ levels(final$hypokal_12hr) =c('No','Yes')
 final$hypokal_iv <- as.factor(final$hypokal_iv)
 levels(final$hypokal_iv)=c('No','Yes')
 
+# set non new-onsets
+levels(final$New_Onset_Diabetic)=c("Y","N")
+final$New_Onset_Diabetic[final$New_Onset_Diabetic != "Y"] <- "N"
+
 # convert to numeric
 final$HbA1c_Closest_to_Admisson <- as.numeric(final$HbA1c_Closest_to_Admisson)
 
 # Set Labels
-label(final$rebound_hyper)='Rebound hyperglycemia'
+label(final$rebound_hyper)='Rebound hyperglycemia 180 mg/dl'
+label(final$rebound_hyper_250)='Rebound hyperglycemia 250 mg/dl'
+label(final$rebound_hyper_300)='Rebound hyperglycemia 300 mg/dl'
 label(final$group)="Group"
 label(final$Sex)='Sex'
 label(final$Ethnicity)='Ethnicity'
@@ -68,14 +82,18 @@ label(final$Weight)='Weight'
 label(final$HbA1c_Closest_to_Admisson)='HbA1c closest to admission'
 label(final$Median_Income)='Median income'
 label(final$median_glucose)='Median glucose'
-label(final$hypo_12hr)='Hypoglycemia within 12 hours after d/c IV insulin'
-label(final$hypo_iv)='Hypoglycemia during IV insulin'
-label(final$ketosis_either)='Ketosis by either BHB or urine ketones'
+label(final$hypo_12hr)='Hypoglycemia (<70 mg/dL) within 12 hours after d/c IV insulin'
+label(final$hypo_iv)='Hypoglycemia (<70 mg/dl) during IV insulin'
+label(final$hypo_12hr54)='Hypoglycemia (<54 mg/dL) within 12 hours after d/c IV insulin'
+label(final$hypo_iv54)='Hypoglycemia (<54 mg/dl) during IV insulin'
+label(final$ketosis_either)='Ketosis w/in 12 hrs after d/c insulin, by either BHB or urine ketones'
 label(final$cerebral_edema)='Cerebral Edema'
 label(final$hypokal_12hr)='Hypokalemia within 12 hours after d/c IV insulin'
 label(final$hypokal_iv)='Hypokalemia during IV insulin'
 label(final$dur_iv_insulin)='Length of IV insulin administration'
 label(final$slopegluc)='Rate of glucose decrease (mg/dL per minute)'
+label(final$Glargine)="Glargine dose/kg"
+label(final$New_Onset_Diabetic)="New onset?"
 
 Norig <- length(final$group)
 final <- final[final$group %in% c("Early","Late"),]
@@ -83,8 +101,9 @@ final$group <- droplevels(final$group)
 N <- sum(!is.na(final$group))
 Nexcl <- Norig - N
 
-tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income"),
-                    group=final$group,margin=2,single=0,ron=2)
+tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","New_Onset_Diabetic",
+    "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine"),
+    group=final$group,margin=2,single=0,ron=2)
 
 
 ####################################################################################################
@@ -96,10 +115,12 @@ tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","Age","Height","W
 # early vs. late glargine variable is October.1.2014.Flag
 #tbl <- table(rebound_hyper$rebound_hyper,rebound_hyper$October.1.2014.Flag)
 #rslt <- chisq.test(tbl)
-tab_primary <- final_table(final,c('rebound_hyper','median_glucose','hypo_12hr','hypo_iv','ketosis_either','cerebral_edema',
+tab_primary <- final_table(final,c('rebound_hyper','rebound_hyper_250','rebound_hyper_300',
+                                   'median_glucose','hypo_12hr','hypo_iv',
+                                   'hypo_12hr54','hypo_iv54',
+                                   'ketosis_either','cerebral_edema',
                                    'hypokal_12hr','hypokal_iv','dur_iv_insulin','slopegluc'),
                            group=final$group,margin=2,single=0,ron=2)
-
 
 
 ```
@@ -112,7 +133,7 @@ The purpose of this study was to determine if early glargine administration in c
 
 Early glargine administration was defined as either (1) glargine administered before the start of IV insulin administration or (2) glargine administered after the start of IV insulin administration with >4 hours of overlap with IV insulin.  Late glargine administration was defined as glargine administered with <2 hour overlap with IV insulin.  There were `r Nexcl` participants with between 2-4 hours of overlap with IV insulin who were excluded from this analysis.
  
-The primary outcome of this study is rebound hyperglycemia, defined as serum glucose >180 mg/dL within 12 hours of discontinuation of IV insulin.  
+The primary outcome of this study is rebound hyperglycemia, defined as serum glucose >180 mg/dL within 12 hours of discontinuation of IV insulin. Secondary analyses examined the outcome of rebound hyperglycemia using cutoffs of 250 and 300 mg/dl. 
 
 The following data cleaning and manipulation steps were performed in order to determine whether each participant met the definition of rebound hyperglycemia:
 
@@ -121,7 +142,8 @@ The following data cleaning and manipulation steps were performed in order to de
 3)  Encounters that were missing insulin administration dates and/or times were deleted.
 4)  For each encounter, the last date and time of IV insulin administration was determined.
 5)  The main data sheet was merged with glucose results by a combination of study ID and age, since a participant could have more than one encounter.
-6)  If a participant had a glucose value >180 mg/dL within 12 hours of IV insulin discontinuation, s/he was classified as having rebound hyperglycemia.
+6)  If a participant had a glucose value >180 mg/dL (or 250 or 300 mg/dl) within 12 hours of IV insulin discontinuation, s/he was classified as having rebound hyperglycemia.
+7)  Subjects 5336, 5770, 6073, 6074, 6080, 6121 were excluded from analysis because they had a diagnosis of type 2 diabetes.
 
 Additional data cleaning and manipulation steps included:
 
@@ -130,8 +152,8 @@ Additional data cleaning and manipulation steps included:
 
 Secondary outcomes were defined as follows:
 
-1) If a participant had a glucose value <70 within 12 hours of IV insulin discontinuation, s/he was classified as having hypoglycemia within 12 hours of insulin discontinuation.
-2) If a participant had a glucose value <70 during IV insulin administration, s/he was classified as having hypoglycemia during IV insulin.
+1) If a participant had a glucose value <70 within 12 hours of IV insulin discontinuation, s/he was classified as having hypoglycemia within 12 hours of insulin discontinuation.  Secondary analyses used a cutoff of 54 mg/dl.
+2) If a participant had a glucose value <70 during IV insulin administration, s/he was classified as having hypoglycemia during IV insulin.  Secondary analyses used a cutoff of 54 mg/dl.
 3) If a participant had a beta-hydroxybutyrate value >= 1.5 mmol/L or moderate or large urine ketones within 12 hours of IV insulin discontinuation, s/he was classifed as having ketosis within 12 hours of insulin discontinuation.
 4) If a participant had a potassium level <3.5 mmol/L either during IV insulin administration or within 12 hours of IV insulin discontinuation, s/he was classified as having hypokalemia during that time period.
 
