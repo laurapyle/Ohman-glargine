@@ -101,6 +101,9 @@ final$group <- droplevels(final$group)
 N <- sum(!is.na(final$group))
 Nexcl <- Norig - N
 
+# calculate minutes from initiation of IV insulin to glargine
+final$min_IV_glargine <- final$min_admit_glargine - final$min_admit_insstart
+
 tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","New_Onset_Diabetic",
     "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine"),
     group=final$group,margin=2,single=0,ron=2)
