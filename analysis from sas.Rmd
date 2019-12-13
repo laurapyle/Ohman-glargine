@@ -95,11 +95,16 @@ label(final$slopegluc)='Rate of glucose decrease (mg/dL per minute)'
 label(final$Glargine)="Glargine dose/kg"
 label(final$New_Onset_Diabetic)="New onset?"
 
+cpg <- final
+cpg <- cpg[cpg$October_1_2014_Flag %in% c("After","Before"),]
+Ncpg <- nrow(cpg)
+
 Norig <- length(final$group)
 final <- final[final$group %in% c("Early","Late"),]
 final$group <- droplevels(final$group)
 N <- sum(!is.na(final$group))
 Nexcl <- Norig - N
+
 
 # calculate minutes from initiation of IV insulin to glargine
 final$min_IV_glargine <- final$min_admit_glargine - final$min_admit_insstart
@@ -108,6 +113,11 @@ tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","New_Onset_Diabet
     "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine"),
     group=final$group,margin=2,single=0,ron=2)
 
+tab1a <- final_table(cpg,c('Sex','Ethnicity',"Insurance_Type","New_Onset_Diabetic",
+    "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine"),
+    group=cpg$October.1.2014.Flag,margin=2,single=0,ron=2)
+
+x <- final_table(cpg,c('Sex'),group=cpg$October.1.2014.Flag,margin=2,single=0,ron=2)
 
 ####################################################################################################
 
@@ -125,6 +135,12 @@ tab_primary <- final_table(final,c('rebound_hyper','rebound_hyper_250','rebound_
                                    'hypokal_12hr','hypokal_iv','dur_iv_insulin','slopegluc'),
                            group=final$group,margin=2,single=0,ron=2)
 
+tab_primarya <- final_table(cpg,c('rebound_hyper','rebound_hyper_250','rebound_hyper_300',
+                                   'median_glucose','hypo_12hr','hypo_iv',
+                                   'hypo_12hr54','hypo_iv54',
+                                   'ketosis_either','cerebral_edema',
+                                   'hypokal_12hr','hypokal_iv','dur_iv_insulin','slopegluc'),
+                           group=cpg$October.1.2014.Flag,margin=2,single=0,ron=2)
 
 ```
 
@@ -162,14 +178,24 @@ Secondary outcomes were defined as follows:
 
 Descriptive statistics reported include mean and standard deviations for continuous variables, and frequencies and percentages for categorical variables.  To compare characteristics in the two groups, t-tests were used for continuous variables and the chi-square test was used for categorical variables.
 
+These analyses were repeated using the initiation date of the clinical practice guideline (10/1/2014) as the definition of early and late glargine.
+
 # Results
 
-There were `r N` subjects included in this analysis.  Descriptive statistics are shown in Table 1.
+There were `r N` subjects included in the analysis using the definition of early and late glargine.  Descriptive statistics are shown in Table 1.
 
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
 kable(tab1,caption="Table 1.  Descriptive statistics.  Statistics given are N(%), mean±SD, or median (25th %ile, 75th %ile).  * denotes that the Mann-Whitney test was used, and ** denotes that Fisher's exact test was used.")
 ```
 \
+
+There were `r Ncpg` subjects included in the analysis using the date of CPG initiation.  Descriptive statistics for before and after the initiation of the CPG are shown in Table 1a.
+
+```{r, results='asis',tidy=TRUE, echo=FALSE}
+kable(tab1,caption="Table 1a.  Descriptive statistics.  Statistics given are N(%), mean±SD, or median (25th %ile, 75th %ile).  * denotes that the Mann-Whitney test was used, and ** denotes that Fisher's exact test was used.")
+```
+\
+
 
 Table 2 shows the results of the comparisons of study outcomes.
 
@@ -177,5 +203,10 @@ Table 2 shows the results of the comparisons of study outcomes.
 kable(tab_primary,caption="Table 2.  Comparison of study outcomes.  Statistics given are N(%), mean±SD, or median (25th %ile, 75th %ile).  * denotes that the Mann-Whitney test was used, and ** denotes that Fisher's exact test was used.")
 ```
 
+Table 2a shows the results of comparison of study outcomes, before and after the initiation of the CPG.
 
+
+```{r, results='asis',tidy=TRUE, echo=FALSE}
+kable(tab_primarya,caption="Table 2.  Comparison of study outcomes.  Statistics given are N(%), mean±SD, or median (25th %ile, 75th %ile).  * denotes that the Mann-Whitney test was used, and ** denotes that Fisher's exact test was used.")
+```
 
