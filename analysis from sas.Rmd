@@ -68,6 +68,12 @@ final$New_Onset_Diabetic[final$New_Onset_Diabetic != "Y"] <- "N"
 # convert to numeric
 final$HbA1c_Closest_to_Admisson <- as.numeric(final$HbA1c_Closest_to_Admisson)
 
+# calculate glargine dose per kg
+# first recode 0 weights to missing
+final[!is.na(final$Weight) & final$Weight==0,]$Weight <- NA
+final$Glargine_per_kg <- final$Glargine/final$Weight
+
+
 # Set Labels
 label(final$rebound_hyper)='Rebound hyperglycemia 180 mg/dl'
 label(final$rebound_hyper_250)='Rebound hyperglycemia 250 mg/dl'
@@ -92,7 +98,7 @@ label(final$hypokal_12hr)='Hypokalemia within 12 hours after d/c IV insulin'
 label(final$hypokal_iv)='Hypokalemia during IV insulin'
 label(final$dur_iv_insulin)='Length of IV insulin administration'
 label(final$slopegluc)='Rate of glucose decrease (mg/dL per minute)'
-label(final$Glargine)="Glargine dose/kg"
+label(final$Glargine_per_kg)="Glargine dose/kg"
 label(final$New_Onset_Diabetic)="New onset?"
 
 cpg <- final
@@ -111,11 +117,11 @@ Nexcl <- Norig - N
 final$min_IV_glargine <- final$min_admit_glargine - final$min_admit_insstart
 
 tab1 <- final_table(final,c('Sex','Ethnicity',"Insurance_Type","New_Onset_Diabetic",
-    "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine"),
+    "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine_per_kg"),
     group=final$group,margin=2,single=0,ron=2)
 
 tab1a <- final_table(cpg,c('Sex','Ethnicity',"Insurance_Type","New_Onset_Diabetic",
-    "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine"),
+    "Age","Height","Weight","HbA1c_Closest_to_Admisson","Median_Income","Glargine_per_kg"),
     group=cpg$October_1_2014_Flag,margin=2,single=0,ron=2)
 
 
@@ -141,6 +147,9 @@ tab_primarya <- final_table(cpg,c('rebound_hyper','rebound_hyper_250','rebound_h
                                    'ketosis_either','cerebral_edema',
                                    'hypokal_12hr','hypokal_iv','dur_iv_insulin','slopegluc'),
     group=cpg$October_1_2014_Flag,margin=2,single=0,ron=2)
+
+# test interaction
+
 
 ```
 
