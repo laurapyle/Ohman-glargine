@@ -112,7 +112,6 @@ final$group <- droplevels(final$group)
 N <- sum(!is.na(final$group))
 Nexcl <- Norig - N
 
-
 # calculate minutes from initiation of IV insulin to glargine
 final$min_IV_glargine <- final$min_admit_glargine - final$min_admit_insstart
 
@@ -149,6 +148,35 @@ tab_primarya <- final_table(cpg,c('rebound_hyper','rebound_hyper_250','rebound_h
     group=cpg$October_1_2014_Flag,margin=2,single=0,ron=2)
 
 # test interaction
+mod1 <- glm(rebound_hyper ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod2 <- glm(rebound_hyper_250 ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod3 <- glm(rebound_hyper_300 ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod4 <- glm(hypo_12hr ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod5 <- glm(hypo_iv ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod6 <- glm(hypo_12hr54 ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod7 <- glm(hypo_iv54 ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod8 <- glm(ketosis_either ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod9 <- glm(cerebral_edema ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod10 <- glm(hypokal_12hr ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod11 <- glm(hypokal_iv ~ group*New_Onset_Diabetic, data=final,family="binomial")
+mod12 <- lm(median_glucose ~ group*New_Onset_Diabetic, data=final)
+mod13 <- lm(dur_iv_insulin ~ group*New_Onset_Diabetic, data=final)
+mod14 <- lm(slopegluc ~ group*New_Onset_Diabetic, data=final)
+
+mod15 <- glm(rebound_hyper ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod16 <- glm(rebound_hyper_250 ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod17 <- glm(rebound_hyper_300 ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod18 <- glm(hypo_12hr ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod19 <- glm(hypo_iv ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod20 <- glm(hypo_12hr54 ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod21 <- glm(hypo_iv54 ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod22 <- glm(ketosis_either ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod23 <- glm(cerebral_edema ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod24 <- glm(hypokal_12hr ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod25 <- glm(hypokal_iv ~ October_1_2014_Flag*New_Onset_Diabetic, data=final,family="binomial")
+mod26 <- lm(median_glucose ~ October_1_2014_Flag*New_Onset_Diabetic, data=final)
+mod27 <- lm(dur_iv_insulin ~ October_1_2014_Flag*New_Onset_Diabetic, data=final)
+mod28 <- lm(slopegluc ~ October_1_2014_Flag*New_Onset_Diabetic, data=final)
 
 
 ```
@@ -189,6 +217,8 @@ Descriptive statistics reported include mean and standard deviations for continu
 
 These analyses were repeated using the initiation date of the clinical practice guideline (10/1/2014) as the definition of early and late glargine.
 
+In order to test whether the effect of the change in CPG differed for early onset vs. established patients, linear models with an interaction between group (i.e., early vs. late or before vs. after CPG) and early onset.  None of the interaction terms were significant, so there is no evidence of a differential effect in early onset vs. established patients.
+
 # Results
 
 There were `r N` subjects included in the analysis using the definition of early and late glargine.  Descriptive statistics are shown in Table 1.
@@ -218,4 +248,5 @@ Table 2a shows the results of comparison of study outcomes, before and after the
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
 kable(tab_primarya,caption="Table 2a.  Comparison of study outcomes.  Statistics given are N(%), mean?SD, or median (25th %ile, 75th %ile).  * denotes that the Mann-Whitney test was used, and ** denotes that Fisher's exact test was used.")
 ```
+
 
