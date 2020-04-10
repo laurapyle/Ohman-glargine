@@ -179,6 +179,13 @@ mod27 <- lm(dur_iv_insulin ~ October_1_2014_Flag*New_Onset_Diabetic, data=final)
 mod28 <- lm(slopegluc ~ October_1_2014_Flag*New_Onset_Diabetic, data=final)
 
 
+# figures
+boxplot(dur_iv_insulin~group,data=final,xlab="",ylab="Duration of IV insulin (minutes)")
+
+counts <- table(final$rebound_hyper,final$group)
+barplot(counts)
+
+
 ```
 
 # Background
