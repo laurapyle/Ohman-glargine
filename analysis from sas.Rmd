@@ -20,6 +20,7 @@ library(devtools)
 library(Hmisc)
 library(knitr)
 library(ggplot2)
+library(gridExtra)
 
 # read in data
 final <- read.csv("H:\\Endocrinology\\Ohman\\Ohman early glargine\\Data\\final data from sas.csv")
@@ -186,21 +187,51 @@ mod28 <- lm(slopegluc ~ October_1_2014_Flag*New_Onset_Diabetic, data=final)
 # box plot IV insulin duration in early vs. late
 boxplot(dur_iv_insulin_hours~group,data=final,xlab="",ylab="Duration of IV insulin (hours)")
 
-# bar graph of % rebound hypo (>180) in early vs. late
+# bar graph of % rebound hyper (>180) in early vs. late
 table <- prop.table(table(final$rebound_hyper,final$group),margin=2)*100
 table <- table[2,]
 barplot(table,ylab = "% Rebound Hyperglycemia (>180 mg/dL)")
 
-
-# bar graph of % rebound hypo (>250) in early vs. late
+# bar graph of % rebound hyper (>250) in early vs. late
 table_250 <- prop.table(table(final$rebound_hyper_250,final$group),margin=2)*100
 table_250 <- table_250[2,]
 barplot(table_250,ylab = "% Rebound Hyperglycemia (>250 mg/dL)")
+
+# bar graph of % rebound hyper (>300) in early vs. late
+table_300 <- prop.table(table(final$rebound_hyper_300,final$group),margin=2)*100
+table_300 <- table_300[2,]
+barplot(table_300,ylab = "% Rebound Hyperglycemia (>300 mg/dL)")
+
+# trying grid arrange
+grid.arrange(barplot(table,ylab = "% Rebound Hyperglycemia (>180 mg/dL)"),
+barplot(table_250,ylab = "% Rebound Hyperglycemia (>250 mg/dL)"),
+barplot(table_300,ylab = "% Rebound Hyperglycemia (>300 mg/dL)"),ncol=2)
 
 # bar graph of % severe hypo in early vs. late
 table_sh <- prop.table(table(final$hypo_12hr54,final$group),margin=2)*100
 table_sh <- table_sh[2,]
 barplot(table_sh,ylab = "% Severe Hypoglycemia (<54 mg/dL)")
+
+# bar graph of hypo <70 in early vs. late during IV insulin
+table_hypo70_iv <- prop.table(table(final$hypo_iv,final$group),margin=2)*100
+table_hypo70_iv <- table_hypo70_iv[2,]
+barplot(table_hypo70_iv,ylab = "% Hypoglycemia (<70 mg/dL) during IV insulin")
+
+# bar graph of hypo <70 in early vs. late within 12 hours of IV insulin
+table_hypo70_12 <- prop.table(table(final$hypo_12hr,final$group),margin=2)*100
+table_hypo70_12 <- table_hypo70_12[2,]
+barplot(table_hypo70_12,ylab = "% Hypoglycemia (<70 mg/dL) within 12 h of IV insulin")
+
+# bar graph of hypo <54 in early vs. late during IV insulin
+table_hypo54_iv <- prop.table(table(final$hypo_iv54,final$group),margin=2)*100
+table_hypo54_iv <- table_hypo54_iv[2,]
+barplot(table_hypo54_iv,ylab = "% Hypoglycemia (<54 mg/dL) during IV insulin")
+
+# bar graph of hypo <54 in early vs. late within 12 hours of IV insulin
+table_hypo54_12 <- prop.table(table(final$hypo_12hr54,final$group),margin=2)*100
+table_hypo54_12 <- table_hypo54_12[2,]
+barplot(table_hypo54_12,ylab = "% Hypoglycemia (<54 mg/dL) within 12 h of IV insulin")
+
 
 ```
 
@@ -279,5 +310,15 @@ barplot(table,ylab = "% Rebound Hyperglycemia (>180 mg/dL)")
 
 barplot(table_250,ylab = "% Rebound Hyperglycemia (>250 mg/dL)")
 
+barplot(table_300,ylab = "% Rebound Hyperglycemia (>300 mg/dL)")
+
 barplot(table_sh,ylab = "% Severe Hypoglycemia (<54 mg/dL)")
+
+barplot(table_hypo70_iv,ylab = "% Hypoglycemia (<70 mg/dL) during IV insulin")
+
+barplot(table_hypo70_12,ylab = "% Hypoglycemia (<70 mg/dL) within 12 h of IV insulin")
+
+barplot(table_hypo54_iv,ylab = "% Hypoglycemia (<54 mg/dL) during IV insulin")
+
+barplot(table_hypo54_12,ylab = "% Hypoglycemia (<54 mg/dL) within 12 h of IV insulin")
 ```
