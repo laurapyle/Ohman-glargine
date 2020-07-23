@@ -21,6 +21,7 @@ library(Hmisc)
 library(knitr)
 library(ggplot2)
 library(gridExtra)
+library(easyGgplot2)
 
 # read in data
 final <- read.csv("H:\\Endocrinology\\Ohman\\Ohman early glargine\\Data\\final data from sas.csv")
@@ -202,10 +203,12 @@ table_300 <- prop.table(table(final$rebound_hyper_300,final$group),margin=2)*100
 table_300 <- table_300[2,]
 barplot(table_300,ylab = "% Rebound Hyperglycemia (>300 mg/dL)")
 
-# trying grid arrange
-grid.arrange(barplot(table,ylab = "% Rebound Hyperglycemia (>180 mg/dL)"),
-barplot(table_250,ylab = "% Rebound Hyperglycemia (>250 mg/dL)"),
-barplot(table_300,ylab = "% Rebound Hyperglycemia (>300 mg/dL)"),ncol=2)
+# group all the hyper data together
+labels <- c(">180 mg/dL",">250 mg/dL",">300 mg/dL")
+table_hyper <- as.data.frame(rbind(table, table_250, table_300))
+table_hyper <- cbind(table_hyper,labels)
+# make a long dataset
+table_hyper_long <- gather(table_hyper,Group,value,Early:Late)
 
 # bar graph of % severe hypo in early vs. late
 table_sh <- prop.table(table(final$hypo_12hr54,final$group),margin=2)*100
@@ -222,6 +225,13 @@ table_hypo70_12 <- prop.table(table(final$hypo_12hr,final$group),margin=2)*100
 table_hypo70_12 <- table_hypo70_12[2,]
 barplot(table_hypo70_12,ylab = "% Hypoglycemia (<70 mg/dL) within 12 h of IV insulin")
 
+# group all the hypo<70 data together
+labels <- c("During IV insulin","Within 12 h")
+table_hypo70 <- as.data.frame(rbind(table_hypo70_iv, table_hypo70_12))
+table_hypo70 <- cbind(table_hypo70,labels)
+# make a long dataset
+table_hypo70_long <- gather(table_hypo70,Group,value,Early:Late)
+
 # bar graph of hypo <54 in early vs. late during IV insulin
 table_hypo54_iv <- prop.table(table(final$hypo_iv54,final$group),margin=2)*100
 table_hypo54_iv <- table_hypo54_iv[2,]
@@ -231,6 +241,13 @@ barplot(table_hypo54_iv,ylab = "% Hypoglycemia (<54 mg/dL) during IV insulin")
 table_hypo54_12 <- prop.table(table(final$hypo_12hr54,final$group),margin=2)*100
 table_hypo54_12 <- table_hypo54_12[2,]
 barplot(table_hypo54_12,ylab = "% Hypoglycemia (<54 mg/dL) within 12 h of IV insulin")
+
+# group all the hypo<54 data together
+labels <- c("During IV insulin","Within 12 h")
+table_hypo54 <- as.data.frame(rbind(table_hypo54_iv, table_hypo54_12))
+table_hypo54 <- cbind(table_hypo54,labels)
+# make a long dataset
+table_hypo54_long <- gather(table_hypo54,Group,value,Early:Late)
 
 
 ```
@@ -306,19 +323,18 @@ kable(tab_primarya,caption="Table 2a.  Comparison of study outcomes.  Statistics
 ```{r, results='asis',tidy=TRUE, echo=FALSE}
 boxplot(dur_iv_insulin_hours~group,data=final,xlab="",ylab="Duration of IV insulin (hours)")
 
-barplot(table,ylab = "% Rebound Hyperglycemia (>180 mg/dL)")
-
-barplot(table_250,ylab = "% Rebound Hyperglycemia (>250 mg/dL)")
-
-barplot(table_300,ylab = "% Rebound Hyperglycemia (>300 mg/dL)")
+ggplot2.barplot(data=table_hyper_long, xName="labels", yName="value", groupName="Group",
+                position=position_dodge(), ytitle="% Rebound Hyperglycemia",xtitle="",
+                groupColors = c("#3d3c3b","#aba9a7"))
 
 barplot(table_sh,ylab = "% Severe Hypoglycemia (<54 mg/dL)")
 
-barplot(table_hypo70_iv,ylab = "% Hypoglycemia (<70 mg/dL) during IV insulin")
+ggplot2.barplot(data=table_hypo70_long, xName="labels", yName="value", groupName="Group",
+                position=position_dodge(), ytitle="% Hypoglycemia (<70 mg/dL)",xtitle="",
+                groupColors = c("#3d3c3b","#aba9a7"),xtickLabelFont=c("6","bold","black"))
 
-barplot(table_hypo70_12,ylab = "% Hypoglycemia (<70 mg/dL) within 12 h of IV insulin")
+ggplot2.barplot(data=table_hypo54_long, xName="labels", yName="value", groupName="Group",
+                position=position_dodge(), ytitle="% Hypoglycemia (<54 mg/dL)",xtitle="",
+                groupColors = c("#3d3c3b","#aba9a7"),xtickLabelFont=c("6","bold","black"))
 
-barplot(table_hypo54_iv,ylab = "% Hypoglycemia (<54 mg/dL) during IV insulin")
-
-barplot(table_hypo54_12,ylab = "% Hypoglycemia (<54 mg/dL) within 12 h of IV insulin")
 ```
